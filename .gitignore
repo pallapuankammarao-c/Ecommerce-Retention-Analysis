@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Executables & downloads
+*.exe
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Raw large datasets (download from Kaggle)
+data/raw/*.csv
+
+# Large processed order-level files (regenerated via run_pipeline.py)
+data/processed/master_*.csv
+data/processed/rfm_customer_segments.csv
+
+# Keep aggregate processed datasets (needed for live web dashboard):
+# - monthly_sales_trend.csv
+# - top_categories.csv
+# - state_distribution.csv
+# - cohort_retention_matrix.csv
+# - cohort_customer_counts.csv
+# - rfm_segment_summary.csv
+# - delivery_delay_analysis.csv
+# - delivery_repeat_summary.csv
+# - kpi_summary.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Power BI temp
+*.pbix.tmp

@@ -1,0 +1,147 @@
+// ==============================================================================
+// Power BI DAX Measures Library
+// Project: E-Commerce Customer Retention & Churn Analysis
+// Author: Data Analytics Team
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// 1. EXECUTIVE OVERVIEW MEASURES (PAGE 1)
+// ------------------------------------------------------------------------------
+
+Total Orders = 
+DISTINCTCOUNT(master_analytical_orders[order_id])
+
+Total Delivered Orders = 
+CALCULATE(
+    [Total Orders],
+    master_analytical_orders[order_status] = "delivered"
+)
+
+Total Revenue = 
+SUM(master_analytical_orders[order_revenue])
+
+Average Order Value (AOV) = 
+DIVIDE([Total Revenue], [Total Delivered Orders], 0)
+
+Total Unique Customers = 
+DISTINCTCOUNT(master_analytical_orders[customer_unique_id])
+
+Average Review Score = 
+AVERAGE(master_analytical_orders[review_score])
+
+Repeat Customer Count = 
+CALCULATE(
+    DISTINCTCOUNT(master_analytical_orders[customer_unique_id]),
+    FILTER(
+        VALUES(master_analytical_orders[customer_unique_id]),
+        CALCULATE(DISTINCTCOUNT(master_analytical_orders[order_id])) > 1
+    )
+)
+
+Repeat Purchase Rate % = 
+DIVIDE([Repeat Customer Count], [Total Unique Customers], 0) * 100
+
+// ------------------------------------------------------------------------------
+// 2. COHORT RETENTION MEASURES (PAGE 2)
+// ------------------------------------------------------------------------------
+
+Cohort Size = 
+CALCULATE(
+    DISTINCTCOUNT(master_analytical_orders[customer_unique_id]),
+    ALLEXCEPT(master_analytical_orders, master_analytical_orders[cohort_month])
+)
+
+Active Customers in Period = 
+DISTINCTCOUNT(master_analytical_orders[customer_unique_id])
+
+Cohort Retention Rate % = 
+DIVIDE([Active Customers in Period], [Cohort Size], 0) * 100
+
+Month 1 Retention % = 
+CALCULATE(
+    [Cohort Retention Rate %],
+    master_analytical_orders[cohort_index] = 1
+)
+
+// ------------------------------------------------------------------------------
+// 3. RFM SEGMENTATION MEASURES (PAGE 3)
+// ------------------------------------------------------------------------------
+
+Customer Recency Days = 
+VAR ReferenceDate = MAX(master_analytical_orders[order_purchase_timestamp])
+VAR CustomerLastOrder = MAX(master_analytical_orders[order_purchase_timestamp])
+RETURN
+    DATEDIFF(CustomerLastOrder, ReferenceDate, DAY)
+
+Customer Frequency = 
+DISTINCTCOUNT(master_analytical_orders[order_id])
+
+Customer Monetary = 
+SUM(master_analytical_orders[order_revenue])
+
+Segment Revenue Share % = 
+DIVIDE(
+    [Total Revenue],
+    CALCULATE([Total Revenue], ALL(rfm_customer_segments[Segment])),
+    0
+) * 100
+
+Segment Customer Share % = 
+DIVIDE(
+    DISTINCTCOUNT(rfm_customer_segments[customer_unique_id]),
+    CALCULATE(DISTINCTCOUNT(rfm_customer_segments[customer_unique_id]), ALL(rfm_customer_segments[Segment])),
+    0
+) * 100
+
+// ------------------------------------------------------------------------------
+// 4. DELIVERY & SATISFACTION MEASURES (PAGE 4)
+// ------------------------------------------------------------------------------
+
+On-Time Orders Count = 
+CALCULATE(
+    [Total Orders],
+    master_analytical_orders[delivery_delay_days] <= 0,
+    master_analytical_orders[order_status] = "delivered"
+)
+
+Late Orders Count = 
+CALCULATE(
+    [Total Orders],
+    master_analytical_orders[delivery_delay_days] > 0,
+    master_analytical_orders[order_status] = "delivered"
+)
+
+On-Time Delivery % = 
+DIVIDE([On-Time Orders Count], [Total Delivered Orders], 0) * 100
+
+Late Delivery % = 
+DIVIDE([Late Orders Count], [Total Delivered Orders], 0) * 100
+
+Average Review On-Time = 
+CALCULATE(
+    [Average Review Score],
+    master_analytical_orders[delivery_delay_days] <= 0
+)
+
+Average Review Late = 
+CALCULATE(
+    [Average Review Score],
+    master_analytical_orders[delivery_delay_days] > 0
+)
+
+Review Score Delta (Late vs On-Time) = 
+[Average Review Late] - [Average Review On-Time]
+
+// ------------------------------------------------------------------------------
+// 5. BUSINESS RECOMMENDATIONS & ROI PROJECTION (PAGE 5)
+// ------------------------------------------------------------------------------
+
+Projected Incremental Retention % = 
+2.5 // Target 2.5 percentage point lift
+
+Projected Repeat Orders Lift = 
+[Total Unique Customers] * ([Projected Incremental Retention %] / 100)
+
+Projected Incremental Revenue BRL = 
+[Projected Repeat Orders Lift] * [Average Order Value (AOV)]
+
