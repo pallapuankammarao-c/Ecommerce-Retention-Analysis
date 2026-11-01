@@ -1,11 +1,20 @@
 # 🛒 E-Commerce Customer Retention & Churn Analysis
 ### End-to-End Data Analytics Portfolio Project (Olist Brazilian E-Commerce)
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458.svg)](https://pandas.pydata.org/)
-[![PostgreSQL](https://img.shields.io/badge/SQL-PostgreSQL%2FMySQL-336791.svg)](https://www.postgresql.org/)
-[![PowerBI](https://img.shields.io/badge/Power_BI-Desktop-F2C811.svg)](https://powerbi.microsoft.com/)
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Click_Here-00f0ff?style=for-the-badge&logo=google-chrome&logoColor=black)](https://dicke-taste-estimation-debug.trycloudflare.com)
+[![GitHub](https://img.shields.io/badge/GitHub-pallapuankammarao--c-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/pallapuankammarao-c/Ecommerce-Retention-Analysis)
+[![PowerBI](https://img.shields.io/badge/Power_BI-Desktop-F2C811.svg?style=for-the-badge&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+
+---
+
+## 🌐 Live Interactive Executive Dashboard
+Experience the live, animated executive web dashboard directly in your browser:
+
+👉 **[https://dicke-taste-estimation-debug.trycloudflare.com](https://dicke-taste-estimation-debug.trycloudflare.com)**
+
+* **Interactive Controls:** Toggle between Executive KPIs, 20-Month Cohort Retention Heatmaps, RFM 9-Segment Treemaps, and Delivery Delay Impact distributions.
+* **Animated Data Visualizations:** Real-time counters, smooth bar charts, responsive tables, and interactive segment detail drawers.
 
 ---
 
@@ -70,7 +79,9 @@ ecommerce-retention-analysis/
 │   ├── 05_rfm_segmentation.sql              # NTILE(5) quintile scoring & CASE segment mapping
 │   └── 06_delivery_review_analysis.sql      # Delivery delay vs review score correlations
 │
-├── dashboard/                               # Power BI Assets & Documentation
+├── dashboard/                               # Web & Power BI Dashboards
+│   ├── index.html                           # Standalone animated executive HTML5 dashboard
+│   ├── app.py                               # Multi-page Streamlit web dashboard
 │   ├── powerbi_dashboard.pbix               # 5-Page interactive Power BI Dashboard
 │   ├── powerbi_dax_measures.dax             # Production DAX calculation formulas
 │   ├── dashboard_guide.md                   # Visual specification & slicer setup guide
