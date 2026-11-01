@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Olist E-Commerce Retention & Churn Analytics Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.35);
+      --accent: #818cf8;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.12) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* Header & Navigation */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-title h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .badge-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+      animation: pulse-animation 2s infinite;
+    }
+
+    @keyframes pulse-animation {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
+    }
+
+    /* Content Views */
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .kpi-card:hover::before {
+      opacity: 1;
+    }
+
+    .kpi-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .kpi-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-sub-green { color: var(--success); font-weight: 600; }
+    .badge-sub-red { color: var(--danger); font-weight: 600; }
+
+    /* Main Chart Grid */
+    .chart-grid-2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .chart-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Custom SVG Animated Area Chart */
+    .svg-chart-container {
+      width: 100%;
+      height: 240px;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .area-path {
+      fill: url(#area-grad);
+      animation: drawArea 1.2s ease-out forwards;
+    }
+
+    .line-path {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawLine 1.5s ease-out forwards;
+      filter: drop-shadow(0 4px 10px rgba(56, 189, 248, 0.4));
+    }
+
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes drawArea {
+      from { opacity: 0; transform: scaleY(0.5); transform-origin: bottom; }
+      to { opacity: 1; transform: scaleY(1); }
+    }
+
+    .chart-dot {
+      fill: #ffffff;
+      stroke: var(--primary);
+      stroke-width: 3;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chart-dot:hover {
+      r: 7;
+      fill: var(--primary);
+      stroke: #ffffff;
+    }
+
+    /* Horizontal Bar List */
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .bar-track {
+      background: rgba(255, 255, 255, 0.05);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      width: 0%;
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Donut Chart / Progress Gauge */
+    .donut-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 240px;
+      position: relative;
+    }
+
+    .donut-center-text {
+      position: absolute;
+      text-align: center;
+    }
+
+    .donut-center-text h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--danger);
+    }
+
+    .donut-center-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Cohort Matrix Table */
+    .matrix-wrap {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    table.cohort-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    table.cohort-table th, table.cohort-table td {
+      padding: 10px 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table.cohort-table th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .heat-cell {
+      border-radius: 4px;
+      font-weight: 600;
+      transition: transform 0.15s ease;
+    }
+
+    .heat-cell:hover {
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+
+    /* RFM Interactive Cards */
+    .rfm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .rfm-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid var(--primary);
+      transition: all 0.2s ease;
+    }
+
+    .rfm-card:hover {
+      transform: translateY(-2px);
+      background: rgba(30, 41, 59, 0.7);
+    }
+
+    /* Interactive Simulator */
+    .slider-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    input[type=range] {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      background: #334155;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary-glow);
+      transition: transform 0.1s ease;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 60px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">🛒</div>
+      <div class="brand-title">
+        <h1>Olist E-Commerce Retention & Churn Dashboard</h1>
+        <p>Brazilian E-Commerce Analysis | 96,478 Delivered Orders | 93,358 Unique Customers</p>
+      </div>
+    </div>
+    <div class="badge-live">
+      <div class="pulse"></div>
+      ACTIVE PORTFOLIO PROJECT
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0, this)">📊 Executive Overview</button>
+    <button class="tab-btn" onclick="switchTab(1, this)">👥 Cohort Retention Heatmap</button>
+    <button class="tab-btn" onclick="switchTab(2, this)">🎯 RFM Customer Segmentation</button>
+    <button class="tab-btn" onclick="switchTab(3, this)">🚚 Delivery Delay & Reviews</button>
+    <button class="tab-btn" onclick="switchTab(4, this)">💡 Strategy & ROI Simulator</button>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- TAB 1: EXECUTIVE OVERVIEW -->
+  <!-- ============================================================ -->
+  <div id="tab-0" class="view-panel active">
+    
+    <!-- KPI Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Gross Revenue</div>
+        <div class="kpi-value" id="kpi-rev">R$ 15.42M</div>
+        <div class="kpi-meta"><span class="badge-sub-green">R$ 15,419,774</span> total bookings</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Delivered Orders</div>
+        <div class="kpi-value" id="kpi-ord">96,478</div>
+        <div class="kpi-meta"><span class="badge-sub-green">97.02%</span> fulfillment rate</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Unique Buyers</div>
+        <div class="kpi-value" id="kpi-cust">93,358</div>
+        <div class="kpi-meta">Individual human customers</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Average Order Value</div>
+        <div class="kpi-value">R$ 159.83</div>
+        <div class="kpi-meta">Per delivered order</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Repeat Purchase Rate</div>
+        <div class="kpi-value" style="color: var(--danger);">3.00%</div>
+        <div class="kpi-meta"><span class="badge-sub-red">97.00% churn</span> after 1st order</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Avg Review Score</div>
+        <div class="kpi-value">4.16 ⭐</div>
+        <div class="kpi-meta">Across 98k+ verified reviews</div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="chart-grid-2">
+      <!-- Monthly Revenue Area Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📈 Monthly Revenue Trajectory (R$ Millions)</div>
+            <div class="card-subtitle">Aggressive growth from Jan 2017 to peak in late 2017/2018</div>
+          </div>
+        </div>
+        <div class="svg-chart-container">
+          <svg viewBox="0 0 700 200" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <!-- Grid Lines -->
+            <line x1="50" y1="30" x2="680" y2="30" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="50" y1="80" x2="680" y2="80" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="50" y1="130" x2="680" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="50" y1="180" x2="680" y2="180" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <!-- Area & Line -->
+            <path class="area-path" d="M 60 180 L 60 170 Q 120 160 180 145 T 300 115 T 420 50 T 540 70 T 660 75 L 660 180 Z"/>
+            <path class="line-path" d="M 60 170 Q 120 160 180 145 T 300 115 T 420 50 T 540 70 T 660 75"/>
+            <!-- Points -->
+            <circle class="chart-dot" cx="60" cy="170" r="4"><title>Jan 17: R$ 0.12M</title></circle>
+            <circle class="chart-dot" cx="180" cy="145" r="4"><title>Jun 17: R$ 0.49M</title></circle>
+            <circle class="chart-dot" cx="300" cy="115" r="4"><title>Oct 17: R$ 0.77M</title></circle>
+            <circle class="chart-dot" cx="420" cy="50" r="4"><title>Nov 17 (Black Friday): R$ 1.19M</title></circle>
+            <circle class="chart-dot" cx="540" cy="70" r="4"><title>Apr 18: R$ 1.16M</title></circle>
+            <circle class="chart-dot" cx="660" cy="75" r="4"><title>Aug 18: R$ 1.02M</title></circle>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Retention Split Donut -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🔄 Customer Retention Funnel</div>
+            <div class="card-subtitle">97% One-time buyer drop-off</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 160 160" width="160" height="160">
+            <!-- Background circle -->
+            <circle cx="80" cy="80" r="60" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="18"/>
+            <!-- One time (97%) -->
+            <circle cx="80" cy="80" r="60" fill="none" stroke="#334155" stroke-width="18"
+                    stroke-dasharray="365" stroke-dashoffset="11" transform="rotate(-90 80 80)"/>
+            <!-- Repeat (3%) -->
+            <circle cx="80" cy="80" r="60" fill="none" stroke="#34d399" stroke-width="18"
+                    stroke-dasharray="377" stroke-dashoffset="365" transform="rotate(-90 80 80)"/>
+          </svg>
+          <div class="donut-center-text">
+            <h2>97.0%</h2>
+            <p>One-Time</p>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-around; font-size:12px; margin-top:12px;">
+          <span style="color:#94a3b8;">● 90,557 Single Buyers</span>
+          <span style="color:#34d399; font-weight:700;">● 2,801 Repeat Buyers</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+      <!-- Top Categories -->
+      <div class="card">
+        <div class="card-title">🏆 Top Product Categories by Revenue</div>
+        <div class="card-subtitle" style="margin-bottom:16px;">Core sales drivers across Olist marketplace</div>
+        <div class="bar-list">
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Bed Bath Table</span><span style="font-weight:700;">R$ 1.71M</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Health & Beauty</span><span style="font-weight:700;">R$ 1.44M</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 84%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Computers Accessories</span><span style="font-weight:700;">R$ 1.33M</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 78%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Furniture Decor</span><span style="font-weight:700;">R$ 1.16M</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 68%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Watches & Gifts</span><span style="font-weight:700;">R$ 1.31M</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 76%;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State Distribution -->
+      <div class="card">
+        <div class="card-title">📍 Top Brazilian States Revenue Share</div>
+        <div class="card-subtitle" style="margin-bottom:16px;">Heavy geographic concentration in Southeast Brazil</div>
+        <div class="bar-list">
+          <div class="bar-item">
+            <div class="bar-label-row"><span>São Paulo (SP)</span><span style="font-weight:700; color:var(--primary);">37.4% (R$ 5.76M)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 100%; background: var(--primary);"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Rio de Janeiro (RJ)</span><span style="font-weight:700;">13.2% (R$ 2.03M)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 35%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Minas Gerais (MG)</span><span style="font-weight:700;">11.9% (R$ 1.83M)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 32%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Rio Grande do Sul (RS)</span><span style="font-weight:700;">5.6% (R$ 0.86M)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 15%;"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Paraná (PR)</span><span style="font-weight:700;">5.3% (R$ 0.81M)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 14%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 2: COHORT RETENTION HEATMAP -->
+  <!-- ============================================================ -->
+  <div id="tab-1" class="view-panel">
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="card-title">👥 Customer Cohort Retention Rate (%) Matrix</div>
+      <div class="card-subtitle">Tracking customer return rates across subsequent months from first purchase</div>
+      
+      <div class="matrix-wrap">
+        <table class="cohort-table">
+          <thead>
+            <tr>
+              <th>Cohort</th>
+              <th>Base Size</th>
+              <th>M0</th>
+              <th>M1</th>
+              <th>M2</th>
+              <th>M3</th>
+              <th>M4</th>
+              <th>M5</th>
+              <th>M6</th>
+              <th>M7</th>
+              <th>M8</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>2017-01</b></td>
+              <td>717</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.7);">100%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.28%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.28%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.15);">0.14%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.35);">0.42%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.15);">0.14%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.30);">0.35%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.35);">0.42%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.28%</td>
+            </tr>
+            <tr>
+              <td><b>2017-02</b></td>
+              <td>1,628</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.7);">100%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.18);">0.18%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.31%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.12);">0.12%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.38);">0.43%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.12);">0.12%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.22);">0.25%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.18);">0.18%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.22);">0.25%</td>
+            </tr>
+            <tr>
+              <td><b>2017-03</b></td>
+              <td>2,503</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.7);">100%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.39);">0.44%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.32);">0.36%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.35);">0.40%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.32);">0.36%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.16);">0.16%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.16);">0.16%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.32);">0.36%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.30);">0.32%</td>
+            </tr>
+            <tr>
+              <td><b>2017-04</b></td>
+              <td>2,256</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.7);">100%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.55); font-weight:800; color:#ffffff;">0.62%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.20);">0.22%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.18);">0.18%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.27%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.27%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.31%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.31%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.31%</td>
+            </tr>
+            <tr>
+              <td><b>2017-05</b></td>
+              <td>3,453</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.7);">100%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.40);">0.46%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.40);">0.46%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.29%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.28);">0.29%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.30);">0.32%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.38);">0.41%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.15);">0.14%</td>
+              <td class="heat-cell" style="background: rgba(56,189,248,0.25);">0.26%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 Critical Takeaway: The Month-1 Retention Cliff</div>
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-top:8px;">
+        Over <b>99.4% of newly acquired customers drop off in Month 1</b> across all cohorts. The business is continuously paying customer acquisition costs (CAC) without harvesting repeat lifecycle value. Fixing Month 1 onboarding is the single highest leverage point in the company.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 3: RFM CUSTOMER SEGMENTATION -->
+  <!-- ============================================================ -->
+  <div id="tab-2" class="view-panel">
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="card-title">🎯 Customer Segments by Revenue & Headcount</div>
+      <div class="card-subtitle">Scoring based on Recency, Frequency, and Monetary quintiles</div>
+      
+      <div class="rfm-grid">
+        <div class="rfm-card" style="border-left-color: var(--primary);">
+          <div style="font-size:16px; font-weight:700;">Potential Loyalists (15.5%)</div>
+          <div style="font-size:22px; font-weight:800; color:var(--primary); margin:6px 0;">R$ 4.37M (28.3%)</div>
+          <div style="font-size:12px; color:var(--text-muted);">14,454 high-spending single buyers (AOV R$ 302). <b>#1 Priority to nurture.</b></div>
+        </div>
+        <div class="rfm-card" style="border-left-color: var(--warning);">
+          <div style="font-size:16px; font-weight:700;">At Risk (0.6%)</div>
+          <div style="font-size:22px; font-weight:800; color:var(--warning); margin:6px 0;">R$ 164.5K (1.1%)</div>
+          <div style="font-size:12px; color:var(--text-muted);">553 proven repeat customers inactive for ~317 days. <b>Save immediately!</b></div>
+        </div>
+        <div class="rfm-card" style="border-left-color: var(--success);">
+          <div style="font-size:16px; font-weight:700;">Champions (1.3%)</div>
+          <div style="font-size:22px; font-weight:800; color:var(--success); margin:6px 0;">R$ 389.5K (2.5%)</div>
+          <div style="font-size:12px; color:var(--text-muted);">1,209 top repeat buyers (Avg freq: 2.15, AOV R$ 322, 4.28 ⭐).</div>
+        </div>
+        <div class="rfm-card" style="border-left-color: var(--danger);">
+          <div style="font-size:16px; font-weight:700;">Lost Customers (19.5%)</div>
+          <div style="font-size:22px; font-weight:800; color:var(--danger); margin:6px 0;">R$ 2.91M (18.9%)</div>
+          <div style="font-size:12px; color:var(--text-muted);">18,204 buyers inactive for >470 days with low re-engagement odds.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 4: DELIVERY DELAY & REVIEWS -->
+  <!-- ============================================================ -->
+  <div id="tab-3" class="view-panel">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+      
+      <div class="card">
+        <div class="card-title">🚚 Fulfillment Performance vs Review Scores</div>
+        <div class="card-subtitle">Impact of late delivery on customer star ratings</div>
+
+        <div style="display:flex; justify-content:space-around; align-items:center; margin:24px 0;">
+          <div style="text-align:center;">
+            <div style="font-size:13px; color:var(--text-muted);">ON-TIME DELIVERIES (91.9%)</div>
+            <div style="font-size:36px; font-weight:800; color:var(--success); margin:8px 0;">4.29 ⭐</div>
+            <div style="font-size:12px; color:var(--success);">64.2% 5-Star Reviews</div>
+          </div>
+          <div style="font-size:28px; color:var(--danger); font-weight:800;">➔</div>
+          <div style="text-align:center;">
+            <div style="font-size:13px; color:var(--text-muted);">LATE DELIVERIES (8.1%)</div>
+            <div style="font-size:36px; font-weight:800; color:var(--danger); margin:8px 0;">2.57 ⭐</div>
+            <div style="font-size:12px; color:var(--danger);">54.2% 1-Star Reviews</div>
+          </div>
+        </div>
+
+        <div class="card" style="background:rgba(239, 68, 68, 0.1); border-color:rgba(239, 68, 68, 0.3);">
+          <div style="font-weight:700; color:var(--danger); font-size:14px;">⚠️ Catastrophic Sentiment Collapse</div>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">
+            A delivery delay triggers an instant <b>-1.72 star penalty (-40.2%)</b> and multiplies 1-star reviews by <b>nearly 10x (from 5.5% to 54.2%)</b>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📍 High-Delay Logistics Hotspots</div>
+        <div class="card-subtitle">States requiring regional warehouse SLA intervention</div>
+        <div class="bar-list" style="margin-top:16px;">
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Alagoas (AL)</span><span style="color:var(--danger); font-weight:700;">24.1% Late</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 100%; background: var(--danger);"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Maranhão (MA)</span><span style="color:var(--danger); font-weight:700;">18.9% Late</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 78%; background: var(--danger);"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Ceará (CE)</span><span style="color:var(--danger); font-weight:700;">16.4% Late</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 68%; background: var(--danger);"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label-row"><span>Rio de Janeiro (RJ)</span><span style="color:var(--warning); font-weight:700;">12.8% Late</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 53%; background: var(--warning);"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAB 5: STRATEGY & ROI SIMULATOR -->
+  <!-- ============================================================ -->
+  <div id="tab-4" class="view-panel">
+    <!-- Simulator Slider -->
+    <div class="slider-box">
+      <div class="card-title">🎛️ Interactive Retention Rate Financial Simulator</div>
+      <div class="card-subtitle">Drag slider to calculate incremental repeat orders and gross revenue impact in real time</div>
+      
+      <div class="slider-row">
+        <input type="range" id="retention-slider" min="0.5" max="5.0" step="0.5" value="2.5" oninput="updateSim(this.value)">
+        <div class="slider-val">+<span id="slider-text">2.5</span>%</div>
+      </div>
+
+      <div class="kpi-grid" style="margin-top:20px; margin-bottom:0;">
+        <div class="kpi-card">
+          <div class="kpi-title">Simulated Retention Rate</div>
+          <div class="kpi-value" id="sim-rate" style="color:var(--success);">5.50%</div>
+          <div class="kpi-meta">Up from 3.00% baseline</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Additional Repeat Orders</div>
+          <div class="kpi-value" id="sim-orders" style="color:var(--primary);">+2,334</div>
+          <div class="kpi-meta">Across 93,358 customer base</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Incremental Gross Revenue</div>
+          <div class="kpi-value" id="sim-rev" style="color:#ffffff;">+R$ 373,043</div>
+          <div class="kpi-meta">Annualized recurring run-rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+      <div class="card">
+        <div style="font-size:15px; font-weight:700; color:var(--primary); margin-bottom:6px;">1. 21-Day Post-Delivery Trigger</div>
+        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">Target the 14,454 <b>Potential Loyalists</b> with automated category cross-sells and an expiring R$ 25 wallet credit 14–21 days post-delivery.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:15px; font-weight:700; color:var(--warning); margin-bottom:6px;">2. VIP Win-Back Blitz</div>
+        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">Target the 553 <b>At Risk</b> repeat buyers with a Free Freight + 15% discount voucher before they pass 365 days of dormancy.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:15px; font-weight:700; color:var(--success); margin-bottom:6px;">3. Proactive Delay Credits</div>
+        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">When carrier tracking detects an in-transit delay >48 hours, automatically credit R$ 20 to the customer's wallet <i>before</i> complaints occur.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Olist Brazilian E-Commerce Retention & Churn Portfolio Project | Built with HTML5, CSS3, & SVG Animations
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    function switchTab(index, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + index).classList.add('active');
+    }
+
+    function updateSim(val) {
+      document.getElementById('slider-text').innerText = parseFloat(val).toFixed(1);
+      const totalCust = 93358;
+      const aov = 159.83;
+      const baseRate = 3.00;
+      
+      const newRate = baseRate + parseFloat(val);
+      const addOrders = Math.round(totalCust * (parseFloat(val) / 100));
+      const addRev = Math.round(addOrders * aov);
+
+      document.getElementById('sim-rate').innerText = newRate.toFixed(2) + '%';
+      document.getElementById('sim-orders').innerText = '+' + addOrders.toLocaleString();
+      document.getElementById('sim-rev').innerText = '+R$ ' + addRev.toLocaleString();
+    }
+  </script>
+</body>
+</html>
+
